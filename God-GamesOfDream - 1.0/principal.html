@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>God - Games of Dream</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(45deg, #1e1e1e, #333, #1e1e1e);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .cabecalho {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .atualizacoes {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            background: #222;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .lixeira {
+            cursor: pointer;
+            color: red;
+            font-size: 18px;
+        }
+
+        .adicionar {
+            font-size: 24px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .formulario {
+            display: none;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #ffcc00;
+            cursor: pointer;
+        }
+
+        .logout {
+            margin-top: 20px;
+            background: #ff4444;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .paginacao {
+            margin-top: 15px;
+        }
+
+        .pagina {
+            cursor: pointer;
+            margin: 5px;
+            padding: 5px 10px;
+            background: #555;
+            border-radius: 5px;
+        }
+
+        .pagina.ativa {
+            background: #ffcc00;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="cabecalho">God - Games of Dream</div>
+    <div class="adicionar" onclick="mostrarFormulario()">✏️</div>
+
+    <div class="atualizacoes">
+        <h1>Últimas Atualizações</h1>
+        <ul id="listaAtualizacoes"></ul>
+        <div class="paginacao" id="paginacao"></div>
+    </div>
+
+    <div class="logout" onclick="logout()">Sair</div>
+
+    <div class="formulario" id="formulario">
+        <h2>Adicionar Atualização</h2>
+        <input type="text" id="jogo" placeholder="Nome do jogo">
+        <input type="text" id="atualizacao" placeholder="Atualização (opcional)">
+        <input type="date" id="data">
+        <button onclick="adicionarAtualizacao()">Adicionar</button>
+        <button onclick="fecharFormulario()">Cancelar</button>
+    </div>
+
+    <script>
+        let usuarioLogado = localStorage.getItem("usuario");
+        let paginaAtual = 1;
+        const itensPorPagina = 5;
+
+        if (usuarioLogado === "GodAdm") {
+            document.querySelector(".adicionar").style.display = "block";
+        }
+
+        function logout() {
+            alert("Você saiu da conta!");
+            window.location.href = "registro.html";
+        }
+
+        function mostrarFormulario() { document.getElementById("formulario").style.display = "block"; }
+        function fecharFormulario() { document.getElementById("formulario").style.display = "none"; }
+
+        function carregarAtualizacoes() {
+            let atualizacoes = JSON.parse(localStorage.getItem("atualizacoes")) || [];
+            let lista = document.getElementById("listaAtualizacoes");
+            lista.innerHTML = "";
+
+            let inicio = (paginaAtual - 1) * itensPorPagina;
+            let fim = inicio + itensPorPagina;
+            let atualizacoesPagina = atualizacoes.slice(inicio, fim);
+
+            atualizacoesPagina.forEach((atualizacao, index) => {
+                let li = document.createElement("li");
+                li.innerHTML = `${atualizacao.jogo} - ${atualizacao.atualizacao || "Sem atualização"} - ${atualizacao.data} 
+                ${usuarioLogado === "GodAdm" ? '<span class="lixeira" onclick="excluirAtualizacao(' + index + ')">🗑️</span>' : ''}`;
+                lista.appendChild(li);
+            });
+
+            atualizarPaginacao(atualizacoes.length);
+        }
+
+        function adicionarAtualizacao() {
+            let jogo = document.getElementById("jogo").value;
+            let atualizacao = document.getElementById("atualizacao").value;
+            let data = document.getElementById("data").value;
+
+            if (!jogo || !data) {
+                alert("Preencha o nome do jogo e a data.");
+                return;
+            }
+
+            let atualizacoes = JSON.parse(localStorage.getItem("atualizacoes")) || [];
+            atualizacoes.push({ jogo, atualizacao, data });
+            localStorage.setItem("atualizacoes", JSON.stringify(atualizacoes));
+
+            fecharFormulario();
+            carregarAtualizacoes();
+        }
+
+        function excluirAtualizacao(index) {
+            let atualizacoes = JSON.parse(localStorage.getItem("atualizacoes")) || [];
+            atualizacoes.splice(index, 1);
+            localStorage.setItem("atualizacoes", JSON.stringify(atualizacoes));
+            carregarAtualizacoes();
+        }
+
+        function atualizarPaginacao(totalItens) {
+            let totalPaginas = Math.ceil(totalItens / itensPorPagina);
+            let paginacaoDiv = document.getElementById("paginacao");
+            paginacaoDiv.innerHTML = "";
+
+            for (let i = 1; i <= totalPaginas; i++) {
+                let btn = document.createElement("span");
+                btn.innerText = i;
+                btn.classList.add("pagina");
+                if (i === paginaAtual) btn.classList.add("ativa");
+                btn.onclick = () => {
+                    paginaAtual = i;
+                    carregarAtualizacoes();
+                };
+                paginacaoDiv.appendChild(btn);
+            }
+        }
+
+        carregarAtualizacoes();
+    </script>
+
+</body>
+</html>
